@@ -38,7 +38,7 @@ $string['clitypevalue'] = 'tipe valor';
 $string['clitypevaluedefault'] = 'tipe valor, tapez Entrée per utilizar la valor per defaut ({$a})';
 $string['cliunknowoption'] = 'Options non reconegudas :
  {$a}.
-Utilisez l\'option --help.';
+Utilizatz l\'opcion --help.';
 $string['cliyesnoprompt'] = 'Picatz y (per òc) o n (per non)';
 $string['environmentrequireinstall'] = 'doit èsser installat e activat';
 $string['environmentrequireversion'] = 'la version {$a->needed} es requesida ; vous utilisez actualament la version {$a->current}';
