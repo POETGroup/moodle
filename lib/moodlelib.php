@@ -4111,16 +4111,6 @@ function authenticate_user_login($username, $password, $ignorelockout=false, &$f
     if ($user) {
         // Use manual if auth not set.
         $auth = empty($user->auth) ? 'manual' : $user->auth;
-        if (!empty($user->suspended)) {
-            $failurereason = AUTH_LOGIN_SUSPENDED;
-
-            // Trigger login failed event.
-            $event = \core\event\user_login_failed::create(array('userid' => $user->id,
-                    'other' => array('username' => $username, 'reason' => $failurereason)));
-            $event->trigger();
-            error_log('[client '.getremoteaddr()."]  $CFG->wwwroot  Suspended Login:  $username  ".$_SERVER['HTTP_USER_AGENT']);
-            return false;
-        }
         if ($auth=='nologin' or !is_enabled_auth($auth)) {
             // Legacy way to suspend user.
             $failurereason = AUTH_LOGIN_SUSPENDED;
@@ -4183,6 +4173,18 @@ function authenticate_user_login($username, $password, $ignorelockout=false, &$f
 
         // Successful authentication.
         if ($user->id) {
+            // The user is suspended. Allow the plugin to deal with "suspended" users if it wishes.
+            if (!empty($user->suspended) && $authplugin->user_suspended_hook($user)) {
+                $failurereason = AUTH_LOGIN_SUSPENDED;
+
+                // Trigger login failed event.
+                $event = \core\event\user_login_failed::create(array('userid' => $user->id,
+                        'other' => array('username' => $username, 'reason' => $failurereason)));
+                $event->trigger();
+                error_log('[client '.getremoteaddr()."]  $CFG->wwwroot  Suspended Login:  $username  ".$_SERVER['HTTP_USER_AGENT']);
+                return false;
+            }
+
             // User already exists in database.
             if (empty($user->auth)) {
                 // For some reason auth isn't set yet.

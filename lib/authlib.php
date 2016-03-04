@@ -517,6 +517,16 @@ class auth_plugin_base {
     }
 
     /**
+     * Hook to allow handling of user suspended flag.
+     *
+     * @param object $user
+     * @return bool true means user suspended flag should be addressed.
+     */
+    function user_suspended_hook($user) {
+        return true;
+    }
+
+    /**
      * Return the properly translated human-friendly title of this auth plugin
      *
      * @todo Document this function
