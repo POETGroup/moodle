@@ -488,7 +488,7 @@ a.btn:active,
 }
 
 #action-blocks {
-    display: block;
+    display: none;
     background: transparent;
 	padding: 2em 0 1em;
 	position: relative;
