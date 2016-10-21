@@ -25,6 +25,8 @@
 require_once('../config.php');
 require_once('lib.php');
 require_once('edit_form.php');
+// Hack to handle custom course metadata
+require_once($CFG->dirroot.'/local/course_metadata/fieldlib.php');
 
 $id = optional_param('id', 0, PARAM_INT); // Course id.
 $categoryid = optional_param('category', 0, PARAM_INT); // Course category - can be changed in edit form.
@@ -54,6 +56,9 @@ if ($id) {
     $category = $DB->get_record('course_categories', array('id'=>$course->category), '*', MUST_EXIST);
     $coursecontext = context_course::instance($course->id);
     require_capability('moodle/course:update', $coursecontext);
+
+    // Hack to handle custom course metadata
+    customfield_load_data($course, 'course', 'course');
 
 } else if ($categoryid) {
     // Creating new course in this category.
@@ -129,6 +134,10 @@ if ($editform->is_cancelled()) {
         // In creating the course.
         $course = create_course($data, $editoroptions);
 
+        // Hack to handle custom course metadata
+        $data->id = $course->id;
+        customfield_save_data($data, 'course', 'course');
+
         // Get the context of the newly created course.
         $context = context_course::instance($course->id, MUST_EXIST);
 
@@ -151,6 +160,9 @@ if ($editform->is_cancelled()) {
     } else {
         // Save any changes to the files used in the editor.
         update_course($data, $editoroptions);
+
+        // Hack to handle custom course metadata
+        customfield_save_data($data, 'course', 'course');
     }
 
     // Redirect user to newly created/updated course.

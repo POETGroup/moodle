@@ -296,6 +296,12 @@ class course_edit_form extends moodleform {
             }
         }
 
+        // Hack to add a section for custom course metadata
+        if (empty($course->id)) {
+            $course->id = 0;
+        }
+        customfield_definition($mform, $course, 'course', 0, 'course');
+
         $this->add_action_buttons();
 
         $mform->addElement('hidden', 'id', null);
