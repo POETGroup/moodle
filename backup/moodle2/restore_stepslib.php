@@ -1430,6 +1430,7 @@ class restore_course_structure_step extends restore_structure_step {
         $category = new restore_path_element('category', '/course/category');
         $tag = new restore_path_element('tag', '/course/tags/tag');
         $allowed_module = new restore_path_element('allowed_module', '/course/allowed_modules/module');
+        $custom_field = new restore_path_element('custom_field', '/course/custom_fields/custom_field');
 
         // Apply for 'format' plugins optional paths at course level
         $this->add_plugin_structure('format', $course);
@@ -1449,7 +1450,7 @@ class restore_course_structure_step extends restore_structure_step {
         // Apply for local plugins optional paths at course level
         $this->add_plugin_structure('local', $course);
 
-        return array($course, $category, $tag, $allowed_module);
+        return array($course, $category, $tag, $allowed_module, $custom_field);
     }
 
     /**
@@ -1563,6 +1564,33 @@ class restore_course_structure_step extends restore_structure_step {
         // course_allowed_modules table.
         if ($this->legacyrestrictmodules) {
             $this->legacyallowedmodules[$data->modulename] = 1;
+        }
+    }
+
+    public function process_custom_field($data) {
+        global $DB;
+
+        $data = (object)$data;
+
+        if ($data->field_data) {
+            if (!$field = $DB->get_record('local_course_metadata_field', array('shortname' => $data->field_name))) {
+                debugging("Custom field [{$data->field_name}] cannot be restored because it doesn't exist in the target database");
+            } else if ($field->datatype != $data->field_type) {
+                debugging("Custom field [{$data->field_name}] cannot be restored because there is a data type mismatch" .
+                        " - target type = [{$field->datatype}] <> restore type = [{$data->field_type}]");
+            } else {
+                if ($customfield = $DB->get_record('local_course_metadata', array('fieldid' => $field->id, 'courseid' => $this->get_courseid()))) {
+                    $customfield->data = $data->field_data;
+                    $DB->update_record('local_course_metadata', $customfield);
+                } else {
+                    $customfield = new stdClass();
+                    $customfield->id = 0;
+                    $customfield->courseid = $this->get_courseid();
+                    $customfield->fieldid = $field->id;
+                    $customfield->data    = $data->field_data;
+                    $DB->insert_record('local_course_metadata', $customfield);
+                }
+            }
         }
     }
 

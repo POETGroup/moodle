@@ -22,11 +22,11 @@
  * @subpackage totara_customfield
  */
 
-namespace totara_customfield\event;
+namespace local_course_metadata\event;
 defined('MOODLE_INTERNAL') || die();
 
 // Event when a user is suspended.
-class profilefield_deleted extends \core\event\base {
+class coursemetadatafield_deleted extends \core\event\base {
 
     /**
      * Initialise required event data properties.
@@ -43,7 +43,7 @@ class profilefield_deleted extends \core\event\base {
      * @return string
      */
     public static function get_name() {
-        return get_string('eventdeleted', 'local_course_metadata');
+        return get_string('eventdeleted', 'totara_customfield');
     }
 
     /**

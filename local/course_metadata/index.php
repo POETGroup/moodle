@@ -34,80 +34,35 @@ require_login();
 // $prefix         = required_param('prefix', PARAM_ALPHA);        // hierarchy name or mod name
 // Modified for Moodle. Only handling 'course' fields.
 $prefix = 'course';
-$typeid         = optional_param('typeid', '0', PARAM_INT);    // typeid if hierarchy
+$typeid = 0;
 $action         = optional_param('action', '', PARAM_ALPHA);    // param for some action
 $id             = optional_param('id', 0, PARAM_INT); // id of a custom field
 
 $sitecontext = context_system::instance();
 
 // use $prefix to determine where to get custom field data from
-if (in_array($prefix, array('course', 'program'))) {
-    if ($prefix == 'program') {
-        $tableprefix = $shortprefix = 'prog';
-        if (totara_feature_disabled('programs') &&
-            totara_feature_disabled('certifications')) {
-            print_error('programsandcertificationsdisabled', 'totara_program');
-        }
-    } else {
-        $tableprefix = $shortprefix = $prefix;
-    }
-    $adminpagename = 'coursecustomfields';
+$tableprefix = $shortprefix = $prefix;
+$adminpagename = 'coursecustomfields';
 
-    $can_add = has_capability('local/course_metadata:createcoursecustomfield', $sitecontext);
-    $can_edit = has_capability('local/course_metadata:updatecoursecustomfield', $sitecontext);
-    $can_delete = has_capability('local/course_metadata:deletecoursecustomfield', $sitecontext);
-} else {
-    // Confirm the hierarchy prefix exists
-    $hierarchy = hierarchy::load_hierarchy($prefix);
-    $shortprefix = hierarchy::get_short_prefix($prefix);
-    $adminpagename = $prefix . 'typemanage';
-    $tableprefix = $shortprefix.'_type';
-
-    $can_add = has_capability('totara/hierarchy:create'.$prefix.'customfield', $sitecontext);
-    $can_edit = has_capability('totara/hierarchy:update'.$prefix.'customfield', $sitecontext);
-    $can_delete = has_capability('totara/hierarchy:delete'.$prefix.'customfield', $sitecontext);
-}
+$can_add = has_capability('local/course_metadata:createcoursecustomfield', $sitecontext);
+$can_edit = has_capability('local/course_metadata:updatecoursecustomfield', $sitecontext);
+$can_delete = has_capability('local/course_metadata:deletecoursecustomfield', $sitecontext);
 
 $PAGE->set_url('/local/course_metadata/index.php');
 $PAGE->set_context($sitecontext);
 $PAGE->set_pagelayout('admin');
 
 $redirectoptions = array('prefix' => $prefix);
-if ($typeid) {
-    $redirectoptions['typeid'] = $typeid;
-}
 if ($id) {
     $redirectoptions['id'] = $id;
 }
 
 $redirect = new moodle_url('/local/course_metadata/index.php', $redirectoptions);
 
-// get some relevant data
-if ($typeid) {
-    $type = $hierarchy->get_type_by_id($typeid);
-}
-
-// set up breadcrumbs trail
-if ($typeid) {
-    $pagetitle = format_string(get_string($prefix.'depthcustomfields', 'totara_hierarchy'));
-
-    $PAGE->navbar->add(get_string($prefix.'types', 'totara_hierarchy'),
-                        new moodle_url('/local/course_metadata/hierarchy/type/index.php', array('prefix' => $prefix)));
-
-    $PAGE->navbar->add(format_string($type->fullname));
-
-} else if ($prefix == 'course') {
-    $pagetitle = format_string(get_string('coursecustomfields', 'local_course_metadata'));
-    $PAGE->navbar->add(get_string('coursecustomfields', 'local_course_metadata'));
-} else if ($prefix == 'program') {
-    $pagetitle = format_string(get_string('programcertcustomfields', 'local_course_metadata'));
-    $PAGE->navbar->add(get_string('programcertcustomfields', 'local_course_metadata'));
-}
+$pagetitle = format_string(get_string('coursecustomfields', 'local_course_metadata'));
+$PAGE->navbar->add(get_string('coursecustomfields', 'local_course_metadata'));
 
 $navlinks = $PAGE->navbar->has_items();
-
-// set the capability prefix
-$capability_prefix = (in_array($prefix, array('course', 'program'))) ? 'core' : 'hierarchy';
 
 admin_externalpage_setup($adminpagename, '', array('prefix' => $prefix));
 
@@ -173,24 +128,11 @@ switch ($action) {
 // Display page header.
 echo $OUTPUT->header();
 
-if (in_array($prefix, array('course', 'program'))) {
-    // Show tab.
-    $currenttab = $prefix;
-    include_once('tabs.php');
-} else {
-    // Print return to type link.
-    $url = $OUTPUT->action_link(new moodle_url('/local/course_metadata/hierarchy/type/index.php', array('prefix' => $prefix, 'typeid' => $typeid)),
-                                "&laquo; " . get_string('alltypes', 'totara_hierarchy'));
-    echo html_writer::tag('p', $url);
-}
+// Show tab.
+$currenttab = $prefix;
+include_once('tabs.php');
 
-if ($prefix == 'course') {
-    $heading = get_string('coursecustomfields', 'local_course_metadata');
-} else if ($prefix == 'program') {
-    $heading = get_string('programcertcustomfields', 'local_course_metadata');
-} else {
-    $heading = format_string($type->fullname);
-}
+$heading = get_string('coursecustomfields', 'local_course_metadata');
 echo $OUTPUT->heading($heading);
 
 // show custom fields for the given type
@@ -199,13 +141,7 @@ $table->head  = array(get_string('customfield', 'local_course_metadata'));
 if ($can_edit || $can_delete) {
     $table->head[] = get_string('edit');
 }
-if ($prefix == 'course') {
-    $table->id = 'customfields_course';
-} else if ($prefix == 'program') {
-    $table->id = 'customfields_program';
-} else {
-    $table->id = 'customfields_'.$hierarchy->prefix;
-}
+$table->id = 'customfields_course';
 $table->data = array();
 
 $where = ($typeid) ? array('typeid' => $typeid) : array();
@@ -230,15 +166,9 @@ echo html_writer::empty_tag('br');
 $options = customfield_list_datatypes();
 
 if ($can_add) {
-    if (in_array($prefix, array('course', 'program'))) {
-        $select = new single_select(new moodle_url('/local/course_metadata/index.php', array('prefix' => $prefix, 'id' => 0, 'action' => 'editfield', 'datatype' => '')), 'datatype', $options, '', array(''=>'choosedots'), 'newfieldform');
-        $select->set_label(get_string('createnewcustomfield', 'local_course_metadata'));
-        echo $OUTPUT->render($select);
-    } else {
-        $select = new single_select(new moodle_url('/local/course_metadata/index.php', array('prefix' => $prefix, 'id' => 0, 'action' => 'editfield', 'typeid' => $typeid, 'datatype' => '')), 'datatype', $options, '', array(''=>'choosedots'), 'newfieldform');
-        $select->set_label(get_string('createnewcustomfield', 'local_course_metadata'));
-        echo $OUTPUT->render($select);
-    }
+    $select = new single_select(new moodle_url('/local/course_metadata/index.php', array('prefix' => $prefix, 'id' => 0, 'action' => 'editfield', 'datatype' => '')), 'datatype', $options, '', array(''=>'choosedots'), 'newfieldform');
+    $select->set_label(get_string('createnewcustomfield', 'local_course_metadata'));
+    echo $OUTPUT->render($select);
 }
 
 echo $OUTPUT->footer();

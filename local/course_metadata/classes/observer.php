@@ -21,10 +21,21 @@
  * @copyright 2016 The POET Group
  */
 
-defined('MOODLE_INTERNAL') || die;
+defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2014050502;
-$plugin->release   = '2.7.0';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->requires  = 2014051203; // Moodle 2.7 release and upwards.
-$plugin->component = 'local_course_metadata';
+/**
+ * Event observer for mod_forum.
+ */
+class local_course_metadata_observer {
+
+    /**
+     * Triggered via course_deleted event.
+     *
+     * @param \core\event\course_deleted $event
+     */
+    public static function course_deleted(\core\event\course_deleted $event) {
+        global $DB;
+
+        $DB->delete_records('local_course_metadata', array('courseid' => $event->objectid));
+    }
+}

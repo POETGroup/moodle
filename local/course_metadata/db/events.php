@@ -21,10 +21,11 @@
  * @copyright 2016 The POET Group
  */
 
-defined('MOODLE_INTERNAL') || die;
+// List of observers.
+$observers = array(
 
-$plugin->version   = 2014050502;
-$plugin->release   = '2.7.0';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->requires  = 2014051203; // Moodle 2.7 release and upwards.
-$plugin->component = 'local_course_metadata';
+    array(
+        'eventname'   => '\core\event\course_deleted',
+        'callback'    => 'local_course_metadata_observer::course_deleted',
+    ),
+);
