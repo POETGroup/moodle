@@ -22,10 +22,25 @@
  */
 
 defined('MOODLE_INTERNAL') || die;
-if ($hassiteconfig) { // Needs this condition or there is error on login page.
-    $ADMIN->add('courses',
-        new admin_externalpage('metadata', new lang_string('metadata', 'local_metadata'),
-            new moodle_url('/local/metadata/index.php'), array('moodle/course:create')
-        )
-    );
-}
+
+//if ($hassiteconfig) { // Needs this condition or there is error on login page.
+//    $ADMIN->add('courses',
+//        new admin_externalpage('metadata', new lang_string('metadata', 'local_metadata'),
+//            new moodle_url('/local/metadata/index.php'), array('moodle/course:create')
+//        )
+//    );
+//}
+
+$ADMIN->add('localplugins', new admin_category('metadatafolder', get_string('metadata', 'local_metadata')));
+$ADMIN->add('metadatafolder',
+    new admin_externalpage('usermetadata', get_string('usermetadata', 'local_metadata'),
+        new moodle_url('/local/metadata/index.php', ['contextlevel' => CONTEXT_USER]), ['moodle/course:create']
+    )
+);
+$ADMIN->add('metadatafolder',
+    new admin_externalpage('coursemetadata', get_string('coursemetadata', 'local_metadata'),
+        new moodle_url('/local/metadata/index.php', ['contextlevel' => CONTEXT_COURSE]), ['moodle/course:create']
+    )
+);
+
+$settings = null;

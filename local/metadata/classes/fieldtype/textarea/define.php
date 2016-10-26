@@ -22,13 +22,15 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_metadata\fieldtype\textarea;
+
 /**
- * Class profile_define_textarea.
+ * Class local_metadata_define_textarea.
  *
  * @copyright  2007 onwards Shane Elliot {@link http://pukunui.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class profile_define_textarea extends profile_define_base {
+class define extends \local_metadata\fieldtype\define_base {
 
     /**
      * Add elements for creating/editing a textarea profile field.

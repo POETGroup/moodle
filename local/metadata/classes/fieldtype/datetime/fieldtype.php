@@ -22,13 +22,15 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU Public License
  */
 
+namespace local_metadata\fieldtype\datetime;
+
 /**
  * Handles displaying and editing the datetime field.
  *
  * @copyright 2010 Mark Nelson <markn@moodle.com>
  * @license http://www.gnu.org/copyleft/gpl.html GNU Public License
  */
-class profile_field_datetime extends profile_field_base {
+class fieldtype extends \local_metadata\fieldtype\fieldtype_base {
 
     /**
      * Handles editing datetime fields.

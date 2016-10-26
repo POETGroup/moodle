@@ -22,13 +22,15 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_metadata\fieldtype\textarea;
+
 /**
- * Class profile_field_textarea.
+ * Class local_metadata_field_textarea.
  *
  * @copyright  2007 onwards Shane Elliot {@link http://pukunui.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class profile_field_textarea extends profile_field_base {
+class fieldtype extends \local_metadata\fieldtype\fieldtype_base {
 
     /**
      * Adds elements for this field type to the edit form.

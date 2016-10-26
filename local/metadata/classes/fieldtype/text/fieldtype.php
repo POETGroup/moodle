@@ -22,13 +22,15 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_metadata\fieldtype\text;
+
 /**
- * Class profile_field_text
+ * Class local_metadata_field_text
  *
  * @copyright  2007 onwards Shane Elliot {@link http://pukunui.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class profile_field_text extends profile_field_base {
+class fieldtype extends \local_metadata\fieldtype\fieldtype_base {
 
     /**
      * Overwrite the base class to display the data for this field

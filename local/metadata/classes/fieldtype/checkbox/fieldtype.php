@@ -22,13 +22,15 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_metadata\fieldtype\checkbox;
+
 /**
- * Class profile_field_checkbox
+ * Class local_metadata_field_checkbox
  *
  * @copyright  2008 onwards Shane Elliot {@link http://pukunui.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class profile_field_checkbox extends profile_field_base {
+class fieldtype extends \local_metadata\fieldtype\fieldtype_base {
 
     /**
      * Constructor method.
@@ -44,7 +46,7 @@ class profile_field_checkbox extends profile_field_base {
         parent::__construct($fieldid, $userid);
 
         if (!empty($this->field)) {
-            $datafield = $DB->get_field('user_info_data', 'data', array('userid' => $this->userid, 'fieldid' => $this->fieldid));
+            $datafield = $DB->get_field('local_metadata', 'data', array('userid' => $this->userid, 'fieldid' => $this->fieldid));
             if ($datafield !== false) {
                 $this->data = $datafield;
             } else {
@@ -58,7 +60,7 @@ class profile_field_checkbox extends profile_field_base {
      *
      * @deprecated since Moodle 3.1
      */
-    public function profile_field_checkbox($fieldid=0, $userid=0) {
+    public function local_metadata_field_checkbox($fieldid=0, $userid=0) {
         debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
         self::__construct($fieldid, $userid);
     }

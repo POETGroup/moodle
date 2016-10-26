@@ -22,13 +22,15 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_metadata\fieldtype\menu;
+
 /**
- * Class profile_field_menu
+ * Class local_metadata_field_menu
  *
  * @copyright  2007 onwards Shane Elliot {@link http://pukunui.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class profile_field_menu extends profile_field_base {
+class fieldtype extends \local_metadata\fieldtype\fieldtype_base {
 
     /** @var array $options */
     public $options;
@@ -77,7 +79,7 @@ class profile_field_menu extends profile_field_base {
      *
      * @deprecated since Moodle 3.1
      */
-    public function profile_field_menu($fieldid=0, $userid=0) {
+    public function local_metadata_field_menu($fieldid=0, $userid=0) {
         debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
         self::__construct($fieldid, $userid);
     }

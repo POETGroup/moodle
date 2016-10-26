@@ -21,4 +21,7 @@
  */
 
 $string['pluginname'] = 'Metadata';
+
+$string['coursemetadata'] = 'Course metadata';
 $string['metadata'] = 'Metadata';
+$string['usermetadata'] = 'User metadata';

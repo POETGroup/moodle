@@ -15,15 +15,33 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for the checkbox profile field type.
+ * Checkbox profile field
  *
- * @package    profilefield_checkbox
+ * @package   profilefield_checkbox
  * @copyright  2008 onwards Shane Elliot {@link http://pukunui.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_metadata\fieldtype\checkbox;
 
-$plugin->version   = 2016052300;        // The current plugin version (Date: YYYYMMDDXX)
-$plugin->requires  = 2016051900;        // Requires this Moodle version
-$plugin->component = 'profilefield_checkbox'; // Full name of the plugin (used for diagnostics)
+/**
+ * Class local_metadata_define_checkbox
+ * @copyright  2008 onwards Shane Elliot {@link http://pukunui.com}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class define extends \local_metadata\fieldtype\define_base {
+
+    /**
+     * Add elements for creating/editing a checkbox profile field.
+     *
+     * @param moodleform $form
+     */
+    public function define_form_specific($form) {
+        // Select whether or not this should be checked by default.
+        $form->addElement('selectyesno', 'defaultdata', get_string('profiledefaultchecked', 'admin'));
+        $form->setDefault('defaultdata', 0); // Defaults to 'no'.
+        $form->setType('defaultdata', PARAM_BOOL);
+    }
+}
+
+

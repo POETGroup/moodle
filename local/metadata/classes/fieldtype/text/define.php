@@ -22,13 +22,15 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_metadata\fieldtype\text;
+
 /**
- * Class profile_define_text
+ * Class local_metadata_define_text
  *
  * @copyright  2007 onwards Shane Elliot {@link http://pukunui.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class profile_define_text extends profile_define_base {
+class define extends \local_metadata\fieldtype\define_base {
 
     /**
      * Add elements for creating/editing a text profile field.
