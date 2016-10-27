@@ -53,6 +53,9 @@ class fieldtype extends \local_metadata\fieldtype\fieldtype_base {
                 $this->data = $this->field->defaultdata;
             }
         }
+
+        // Set the name for display; will need to be a language string.
+        $this->name = 'Checkbox';
     }
 
     /**

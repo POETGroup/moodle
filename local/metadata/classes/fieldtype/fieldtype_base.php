@@ -54,6 +54,9 @@ class fieldtype_base {
     /** @var string */
     public $dataformat;
 
+    /** @var string */
+    protected $name;
+
     /**
      * Constructor method.
      * @param int $fieldid id of the profile from the local_metadata_field table
@@ -65,6 +68,9 @@ class fieldtype_base {
         $this->set_fieldid($fieldid);
         $this->set_userid($userid);
         $this->load_data();
+        if (!isset($this->name)) {
+            $this->name = '-- unknown --';
+        }
     }
 
     /**
@@ -406,5 +412,20 @@ class fieldtype_base {
      */
     public function get_field_properties() {
         return array(PARAM_RAW, NULL_NOT_ALLOWED);
+    }
+
+    /**
+     * Magic method for getting properties.
+     * @param string $name
+     * @return mixed
+     * @throws \coding_exception
+     */
+    public function __get($name) {
+        $allowed = ['name'];
+        if (in_array($name, $allowed)) {
+            return $this->$name;
+        } else {
+            throw new \coding_exception($name.' is not a publicly accessible property of '.get_class($this));
+        }
     }
 }

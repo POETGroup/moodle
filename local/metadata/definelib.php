@@ -52,12 +52,13 @@ function local_metadata_reorder_fields() {
 
 /**
  * Reorder the profile categoriess starting at the category at the given startorder.
+ * @param int $contextlevel The context of category to work on.
  */
-function local_metadata_reorder_categories() {
+function local_metadata_reorder_categories($contextlevel) {
     global $DB;
 
     $i = 1;
-    if ($categories = $DB->get_records('local_metadata_category', null, 'sortorder ASC')) {
+    if ($categories = $DB->get_records('local_metadata_category', ['contextlevel' => $contextlevel], 'sortorder ASC')) {
         foreach ($categories as $cat) {
             $c = new stdClass();
             $c->id = $cat->id;
@@ -80,7 +81,7 @@ function local_metadata_delete_category($id) {
         print_error('invalidcategoryid');
     }
 
-    if (!$categories = $DB->get_records('local_metadata_category', null, 'sortorder ASC')) {
+    if (!$categories = $DB->get_records('local_metadata_category', ['contextlevel' => $category->contextlevel], 'sortorder ASC')) {
         print_error('nocate', 'debug');
     }
 
@@ -115,7 +116,7 @@ function local_metadata_delete_category($id) {
 
     // Finally we get to delete the category.
     $DB->delete_records('local_metadata_category', array('id' => $category->id));
-    local_metadata_reorder_categories();
+    local_metadata_reorder_categories($category->contextlevel);
     return true;
 }
 
@@ -197,12 +198,12 @@ function local_metadata_move_field($id, $move) {
 function local_metadata_move_category($id, $move) {
     global $DB;
     // Get the category object.
-    if (!($category = $DB->get_record('local_metadata_category', array('id' => $id), 'id, sortorder'))) {
+    if (!($category = $DB->get_record('local_metadata_category', array('id' => $id), 'id, contextlevel, sortorder'))) {
         return false;
     }
 
     // Count the number of categories.
-    $categorycount = $DB->count_records('local_metadata_category');
+    $categorycount = $DB->count_records('local_metadata_category', ['contextlevel' => $category->contextlevel]);
 
     // Calculate the new sortorder.
     if (($move == 'up') and ($category->sortorder > 1)) {
@@ -214,7 +215,8 @@ function local_metadata_move_category($id, $move) {
     }
 
     // Retrieve the category object that is currently residing in the new position.
-    if ($swapcategory = $DB->get_record('local_metadata_category', array('sortorder' => $neworder), 'id, sortorder')) {
+    if ($swapcategory = $DB->get_record('local_metadata_category',
+            ['contextlevel' => $category->contextlevel, 'sortorder' => $neworder], 'id, contextlevel, sortorder')) {
 
         // Swap the sortorders.
         $swapcategory->sortorder = $category->sortorder;
@@ -233,11 +235,20 @@ function local_metadata_move_category($id, $move) {
  * @return   array   a list of the datatypes suitable to use in a select statement
  */
 function local_metadata_list_datatypes() {
-    $datatypes = array();
+    global $CFG;
 
-    $plugins = core_component::get_plugin_list('profilefield');
-    foreach ($plugins as $type => $unused) {
-        $datatypes[$type] = get_string('pluginname', 'profilefield_'.$type);
+    $datatypes = [];
+    $path = $CFG->dirroot.'/local/metadata/classes/fieldtype/';
+    $thisdir = new \DirectoryIterator($path);
+    foreach ($thisdir as $dir) {
+        if ($dir->isDir()) {
+            $name = $dir->getFilename();
+            if (($name != '.') && ($name != '..')) {
+                $classname = "\\local_metadata\\fieldtype\\{$name}\\fieldtype";
+                $newdatatype = new $classname();
+                $datatypes[$name] = $newdatatype->name;
+            }
+        }
     }
     asort($datatypes);
 
@@ -255,7 +266,6 @@ function local_metadata_list_categories($contextlevel) {
     return array_map('format_string', $categories);
 }
 
-
 /**
  * Edit a category
  *
@@ -267,7 +277,7 @@ function local_metadata_edit_category($id, $redirect, $contextlevel) {
 
     $categoryform = new local_metadata\forms\category_form();
 
-    if (!($category = $DB->get_record('local_metadata_category', array('id' => $id)))) {
+    if (!($category = $DB->get_record('local_metadata_category', ['id' => $id]))) {
         $category = new stdClass();
         $category->contextlevel = $contextlevel;
     }
@@ -279,12 +289,12 @@ function local_metadata_edit_category($id, $redirect, $contextlevel) {
         if ($data = $categoryform->get_data()) {
             if (empty($data->id)) {
                 unset($data->id);
-                $data->sortorder = $DB->count_records('local_metadata_category') + 1;
+                $data->sortorder = $DB->count_records('local_metadata_category', ['contextlevel' => $contextlevel]) + 1;
                 $DB->insert_record('local_metadata_category', $data, false);
             } else {
                 $DB->update_record('local_metadata_category', $data);
             }
-            local_metadata_reorder_categories();
+            local_metadata_reorder_categories($category->contextlevel);
             redirect($redirect);
 
         }
@@ -376,7 +386,7 @@ function local_metadata_edit_field($id, $datatype, $redirect, $contextlevel) {
 
             $formfield->define_save($data);
             local_metadata_reorder_fields();
-            local_metadata_reorder_categories();
+            local_metadata_reorder_categories($contextlevel);
             redirect($redirect);
         }
 
