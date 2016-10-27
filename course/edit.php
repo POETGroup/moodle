@@ -128,6 +128,13 @@ if (!empty($course)) {
     // Populate course tags.
     $course->tags = core_tag_tag::get_item_tags_array('core', 'course', $course->id);
 
+    // Course metadata, if enabled.
+    if (get_config('local_metadata', 'coursemetadataenabled') == 1) {
+        // Load custom profile fields data.
+        require_once($CFG->dirroot.'/local/metadata/lib.php');
+        local_metadata_load_data($course, CONTEXT_COURSE);
+    }
+
 } else {
     // Editor should respect category context if course context is not set.
     $editoroptions['context'] = $catcontext;
@@ -186,6 +193,13 @@ if ($editform->is_cancelled()) {
         update_course($data, $editoroptions);
         // Set the URL to take them too if they choose save and display.
         $courseurl = new moodle_url('/course/view.php', array('id' => $course->id));
+    }
+
+    // Course metadata, if enabled.
+    if (get_config('local_metadata', 'coursemetadataenabled') == 1) {
+        // Load custom profile fields data.
+        require_once($CFG->dirroot.'/local/metadata/lib.php');
+        local_metadata_save_data($data, CONTEXT_COURSE);
     }
 
     if (isset($data->saveanddisplay)) {

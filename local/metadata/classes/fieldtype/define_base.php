@@ -39,7 +39,7 @@ class define_base {
     /**
      * Constructor method.
      * @param int $fieldid id of the profile from the local_metadata_field table
-     * @param int $userid id of the user for whom we are displaying data
+     * @param int $instanceid id of the user for whom we are displaying data
      */
     public function __construct($contextlevel = CONTEXT_USER) {
         global $USER;

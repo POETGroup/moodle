@@ -38,15 +38,15 @@ class fieldtype extends \local_metadata\fieldtype\fieldtype_base {
      * the corresponding key for the data if it exists
      *
      * @param int $fieldid
-     * @param int $userid
+     * @param int $instanceid
      */
-    public function __construct($fieldid=0, $userid=0) {
+    public function __construct($fieldid=0, $instanceid=0) {
         global $DB;
         // First call parent constructor.
-        parent::__construct($fieldid, $userid);
+        parent::__construct($fieldid, $instanceid);
 
         if (!empty($this->field)) {
-            $datafield = $DB->get_field('local_metadata', 'data', array('userid' => $this->userid, 'fieldid' => $this->fieldid));
+            $datafield = $DB->get_field('local_metadata', 'data', array('instanceid' => $this->instanceid, 'fieldid' => $this->fieldid));
             if ($datafield !== false) {
                 $this->data = $datafield;
             } else {
@@ -63,9 +63,9 @@ class fieldtype extends \local_metadata\fieldtype\fieldtype_base {
      *
      * @deprecated since Moodle 3.1
      */
-    public function local_metadata_field_checkbox($fieldid=0, $userid=0) {
+    public function local_metadata_field_checkbox($fieldid=0, $instanceid=0) {
         debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
-        self::__construct($fieldid, $userid);
+        self::__construct($fieldid, $instanceid);
     }
 
     /**
@@ -79,7 +79,7 @@ class fieldtype extends \local_metadata\fieldtype\fieldtype_base {
             $checkbox->setChecked(true);
         }
         $mform->setType($this->inputname, PARAM_BOOL);
-        if ($this->is_required() and !has_capability('moodle/user:update', context_system::instance())) {
+        if ($this->is_required() and !has_capability('moodle/user:update', \context_system::instance())) {
             $mform->addRule($this->inputname, get_string('required'), 'nonzero', null, 'client');
         }
     }

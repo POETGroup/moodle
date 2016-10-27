@@ -315,6 +315,12 @@ class course_edit_form extends moodleform {
                     array('itemtype' => 'course', 'component' => 'core'));
         }
 
+        // Course metadata, if enabled.
+        if (get_config('local_metadata', 'coursemetadataenabled') == 1) {
+            require_once($CFG->dirroot.'/local/metadata/lib.php');
+            local_metadata_definition($mform, $course->id, CONTEXT_COURSE);
+        }
+
         // When two elements we need a group.
         $buttonarray = array();
         $classarray = array('class' => 'form-submit');
@@ -413,6 +419,14 @@ class course_edit_form extends moodleform {
         $formaterrors = $courseformat->edit_form_validation($data, $files, $errors);
         if (!empty($formaterrors) && is_array($formaterrors)) {
             $errors = array_merge($errors, $formaterrors);
+        }
+
+        // Course metadata, if enabled.
+        if (get_config('local_metadata', 'coursemetadataenabled') == 1) {
+            // Next the customisable profile fields.
+            global $CFG;
+            require_once($CFG->dirroot.'/local/metadata/lib.php');
+            $errors += local_metadata_validation($data, $files, CONTEXT_COURSE);
         }
 
         return $errors;

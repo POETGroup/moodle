@@ -23,15 +23,19 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-//if ($hassiteconfig) { // Needs this condition or there is error on login page.
-//    $ADMIN->add('courses',
-//        new admin_externalpage('metadata', new lang_string('metadata', 'local_metadata'),
-//            new moodle_url('/local/metadata/index.php'), array('moodle/course:create')
-//        )
-//    );
-//}
-
 $ADMIN->add('localplugins', new admin_category('metadatafolder', get_string('metadata', 'local_metadata')));
+
+$settings = new admin_settingpage('local_metadata', get_string('settings'));
+if ($ADMIN->fulltree) {
+    $item = new admin_setting_configcheckbox('local_metadata/usermetadataenabled',
+        new lang_string('usermetadataenabled', 'local_metadata'), '', 0);
+    $settings->add($item);
+    $item = new admin_setting_configcheckbox('local_metadata/coursemetadataenabled',
+        new lang_string('coursemetadataenabled', 'local_metadata'), '', 1);
+    $settings->add($item);
+}
+$ADMIN->add('metadatafolder', $settings);
+
 $ADMIN->add('metadatafolder',
     new admin_externalpage('usermetadata', get_string('usermetadata', 'local_metadata'),
         new moodle_url('/local/metadata/index.php', ['contextlevel' => CONTEXT_USER]), ['moodle/course:create']

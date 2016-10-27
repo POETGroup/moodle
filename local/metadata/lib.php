@@ -24,15 +24,14 @@
  * Loads user profile field data into the user object.
  * @param stdClass $user
  */
-function local_metadata_load_data($user) {
-    global $CFG, $DB;
+function local_metadata_load_data($instance, $contextlevel) {
+    global $DB;
 
-    if ($fields = $DB->get_records('local_metadata_field')) {
+    if ($fields = $DB->get_records('local_metadata_field', ['contextlevel' => $contextlevel])) {
         foreach ($fields as $field) {
-            require_once($CFG->dirroot.'/local/metadata/field/'.$field->datatype.'/field.class.php');
-            $newfield = 'local_metadata_field_'.$field->datatype;
-            $formfield = new $newfield($field->id, $user->id);
-            $formfield->edit_load_user_data($user);
+            $newfield = "\\local_metadata\\fieldtype\\{$field->datatype}\\fieldtype";
+            $formfield = new $newfield($field->id, $instance->id);
+            $formfield->edit_load_instance_data($instance);
         }
     }
 }
@@ -41,17 +40,17 @@ function local_metadata_load_data($user) {
  * Print out the customisable categories and fields for a users profile
  *
  * @param moodleform $mform instance of the moodleform class
- * @param int $userid id of user whose profile is being edited.
+ * @param int $instanceid id of user whose profile is being edited.
  */
-function local_metadata_definition($mform, $userid = 0) {
-    global $CFG, $DB;
+function local_metadata_definition($mform, $instanceid = 0, $contextlevel) {
+    global $DB;
 
     // If user is "admin" fields are displayed regardless.
     $update = has_capability('moodle/user:update', context_system::instance());
 
-    if ($categories = $DB->get_records('local_metadata_category', null, 'sortorder ASC')) {
+    if ($categories = $DB->get_records('local_metadata_category', ['contextlevel' => $contextlevel], 'sortorder ASC')) {
         foreach ($categories as $category) {
-            if ($fields = $DB->get_records('local_metadata_field', array('categoryid' => $category->id), 'sortorder ASC')) {
+            if ($fields = $DB->get_records('local_metadata_field', ['categoryid' => $category->id], 'sortorder ASC')) {
 
                 // Check first if *any* fields will be displayed.
                 $display = false;
@@ -65,9 +64,8 @@ function local_metadata_definition($mform, $userid = 0) {
                 if ($display or $update) {
                     $mform->addElement('header', 'category_'.$category->id, format_string($category->name));
                     foreach ($fields as $field) {
-                        require_once($CFG->dirroot.'/local/metadata/field/'.$field->datatype.'/field.class.php');
-                        $newfield = 'local_metadata_field_'.$field->datatype;
-                        $formfield = new $newfield($field->id, $userid);
+                        $newfield = "\\local_metadata\\fieldtype\\{$field->datatype}\\fieldtype";
+                        $formfield = new $newfield($field->id, $instanceid);
                         $formfield->edit_field($mform);
                     }
                 }
@@ -77,20 +75,19 @@ function local_metadata_definition($mform, $userid = 0) {
 }
 
 /**
- * Adds profile fields to user edit forms.
+ * Adds profile fields to instance edit forms.
  * @param moodleform $mform
- * @param int $userid
+ * @param int $instanceid
  */
-function local_metadata_definition_after_data($mform, $userid) {
-    global $CFG, $DB;
+function local_metadata_definition_after_data($mform, $instanceid, $contextlevel) {
+    global $DB;
 
-    $userid = ($userid < 0) ? 0 : (int)$userid;
+    $instanceid = ($instanceid < 0) ? 0 : (int)$instanceid;
 
-    if ($fields = $DB->get_records('local_metadata_field')) {
+    if ($fields = $DB->get_records('local_metadata_field', ['contextlevel' => $contextlevel])) {
         foreach ($fields as $field) {
-            require_once($CFG->dirroot.'/local/metadata/field/'.$field->datatype.'/field.class.php');
-            $newfield = 'local_metadata_field_'.$field->datatype;
-            $formfield = new $newfield($field->id, $userid);
+            $newfield = "\\local_metadata\\fieldtype\\{$field->datatype}\\fieldtype";
+            $formfield = new $newfield($field->id, $instanceid);
             $formfield->edit_after_data($mform);
         }
     }
@@ -98,56 +95,57 @@ function local_metadata_definition_after_data($mform, $userid) {
 
 /**
  * Validates profile data.
- * @param stdClass $usernew
+ * @param stdClass $new
  * @param array $files
  * @return array
  */
-function local_metadata_validation($usernew, $files) {
-    global $CFG, $DB;
+function local_metadata_validation($new, $files, $contextlevel) {
+    global $DB;
+
+    if (is_array($new)) {
+        $new = (object)$new;
+    }
 
     $err = array();
-    if ($fields = $DB->get_records('local_metadata_field')) {
+    if ($fields = $DB->get_records('local_metadata_field', ['contextlevel' => $contextlevel])) {
         foreach ($fields as $field) {
-            require_once($CFG->dirroot.'/local/metadata/field/'.$field->datatype.'/field.class.php');
-            $newfield = 'local_metadata_field_'.$field->datatype;
-            $formfield = new $newfield($field->id, $usernew->id);
-            $err += $formfield->edit_validate_field($usernew, $files);
+            $newfield = "\\local_metadata\\fieldtype\\{$field->datatype}\\fieldtype";
+            $formfield = new $newfield($field->id, $new->id);
+            $err += $formfield->edit_validate_field($new, $files);
         }
     }
     return $err;
 }
 
 /**
- * Saves profile data for a user.
- * @param stdClass $usernew
+ * Saves profile data for a instance.
+ * @param stdClass $new
  */
-function local_metadata_save_data($usernew) {
-    global $CFG, $DB;
+function local_metadata_save_data($new, $contextlevel) {
+    global $DB;
 
-    if ($fields = $DB->get_records('local_metadata_field')) {
+    if ($fields = $DB->get_records('local_metadata_field', ['contextlevel' => $contextlevel])) {
         foreach ($fields as $field) {
-            require_once($CFG->dirroot.'/local/metadata/field/'.$field->datatype.'/field.class.php');
-            $newfield = 'local_metadata_field_'.$field->datatype;
-            $formfield = new $newfield($field->id, $usernew->id);
-            $formfield->edit_save_data($usernew);
+            $newfield = "\\local_metadata\\fieldtype\\{$field->datatype}\\fieldtype";
+            $formfield = new $newfield($field->id, $new->id);
+            $formfield->edit_save_data($new);
         }
     }
 }
 
 /**
  * Display profile fields.
- * @param int $userid
+ * @param int $instanceid
  */
-function local_metadata_display_fields($userid) {
-    global $CFG, $USER, $DB;
+function local_metadata_display_fields($instanceid, $contextlevel) {
+    global $DB;
 
-    if ($categories = $DB->get_records('local_metadata_category', null, 'sortorder ASC')) {
+    if ($categories = $DB->get_records('local_metadata_category', ['contextlevel' => $contextlevel], 'sortorder ASC')) {
         foreach ($categories as $category) {
-            if ($fields = $DB->get_records('local_metadata_field', array('categoryid' => $category->id), 'sortorder ASC')) {
+            if ($fields = $DB->get_records('local_metadata_field', ['categoryid' => $category->id], 'sortorder ASC')) {
                 foreach ($fields as $field) {
-                    require_once($CFG->dirroot.'/local/metadata/field/'.$field->datatype.'/field.class.php');
-                    $newfield = 'local_metadata_field_'.$field->datatype;
-                    $formfield = new $newfield($field->id, $userid);
+                    $newfield = "\\local_metadata\\fieldtype\\{$field->datatype}\\fieldtype";
+                    $formfield = new $newfield($field->id, $instanceid);
                     if ($formfield->is_visible() and !$formfield->is_empty()) {
                         echo html_writer::tag('dt', format_string($formfield->field->name));
                         echo html_writer::tag('dd', $formfield->display_data());
@@ -160,26 +158,27 @@ function local_metadata_display_fields($userid) {
 
 /**
  * Retrieves a list of profile fields that must be displayed in the sign-up form.
+ * Specific to user profiles.
  *
  * @return array list of profile fields info
  * @since Moodle 3.2
  */
 function local_metadata_get_signup_fields() {
-    global $CFG, $DB;
+    global $DB;
 
-    $profilefields = array();
+    $profilefields = [];
     // Only retrieve required custom fields (with category information)
     // results are sort by categories, then by fields.
     $sql = "SELECT uf.id as fieldid, ic.id as categoryid, ic.name as categoryname, uf.datatype
                 FROM {local_metadata_field} uf
                 JOIN {local_metadata_category} ic
                 ON uf.categoryid = ic.id AND uf.signup = 1 AND uf.visible<>0
+                WHERE uf.contextlevel = ?
                 ORDER BY ic.sortorder ASC, uf.sortorder ASC";
 
-    if ($fields = $DB->get_records_sql($sql)) {
+    if ($fields = $DB->get_records_sql($sql, [CONTEXT_USER])) {
         foreach ($fields as $field) {
-            require_once($CFG->dirroot.'/local/metadata/field/'.$field->datatype.'/field.class.php');
-            $newfield = 'local_metadata_field_'.$field->datatype;
+            $newfield = "\\local_metadata\\fieldtype\\{$field->datatype}\\fieldtype";
             $fieldobject = new $newfield($field->fieldid);
 
             $profilefields[] = (object) array(
@@ -197,6 +196,7 @@ function local_metadata_get_signup_fields() {
 /**
  * Adds code snippet to a moodle form object for custom profile fields that
  * should appear on the signup page
+ * Specific to user profiles.
  * @param moodleform $mform moodle form object
  */
 function local_metadata_signup_fields($mform) {
@@ -215,21 +215,21 @@ function local_metadata_signup_fields($mform) {
 
 /**
  * Returns an object with the custom profile fields set for the given user
- * @param integer $userid
+ * Specific to user profiles.
+ * @param integer $instanceid
  * @param bool $onlyinuserobject True if you only want the ones in $USER.
  * @return stdClass
  */
-function local_metadata_user_record($userid, $onlyinuserobject = true) {
-    global $CFG, $DB;
+function local_metadata_user_record($instanceid, $onlyinuserobject = true) {
+    global $DB;
 
-    $usercustomfields = new stdClass();
+    $usercustomfields = new \stdClass();
 
-    if ($fields = $DB->get_records('local_metadata_field')) {
+    if ($fields = $DB->get_records('local_metadata_field', ['contextlevel' => CONTEXT_USER])) {
         foreach ($fields as $field) {
-            require_once($CFG->dirroot.'/local/metadata/field/'.$field->datatype.'/field.class.php');
-            $newfield = 'local_metadata_field_'.$field->datatype;
-            $formfield = new $newfield($field->id, $userid);
-            if (!$onlyinuserobject || $formfield->is_user_object_data()) {
+            $newfield = "\\local_metadata\\fieldtype\\{$field->datatype}\\fieldtype";
+            $formfield = new $newfield($field->id, $instanceid);
+            if (!$onlyinuserobject || $formfield->is_instance_object_data()) {
                 $usercustomfields->{$field->shortname} = $formfield->data;
             }
         }
@@ -252,69 +252,24 @@ function local_metadata_user_record($userid, $onlyinuserobject = true) {
  * @return array Array of field objects from database (indexed by id)
  * @since Moodle 2.7.1
  */
-function local_metadata_get_custom_fields($onlyinuserobject = false) {
-    global $DB, $CFG;
+function local_metadata_get_custom_fields($onlyinuserobject = false, $contextlevel) {
+    global $DB;
 
     // Get all the fields.
-    $fields = $DB->get_records('local_metadata_field', null, 'id ASC');
+    $fields = $DB->get_records('local_metadata_field', ['contextlevel' => $contextlevel], 'id ASC');
 
     // If only doing the user object ones, unset the rest.
     if ($onlyinuserobject) {
         foreach ($fields as $id => $field) {
-            require_once($CFG->dirroot . '/local/metadata/field/' .
-                    $field->datatype . '/field.class.php');
-            $newfield = 'local_metadata_field_' . $field->datatype;
+            $newfield = "\\local_metadata\\fieldtype\\{$field->datatype}\\fieldtype";
             $formfield = new $newfield();
-            if (!$formfield->is_user_object_data()) {
+            if (!$formfield->is_instance_object_data()) {
                 unset($fields[$id]);
             }
         }
     }
 
     return $fields;
-}
-
-/**
- * Load custom profile fields into user object
- *
- * Please note originally in 1.9 we were using the custom field names directly,
- * but it was causing unexpected collisions when adding new fields to user table,
- * so instead we now use 'local_metadata_' prefix.
- *
- * @param stdClass $user user object
- */
-function local_metadata_load_custom_fields($user) {
-    $user->profile = (array)local_metadata_user_record($user->id);
-}
-
-/**
- * Trigger a user profile viewed event.
- *
- * @param stdClass  $user user  object
- * @param stdClass  $context  context object (course or user)
- * @param stdClass  $course course  object
- * @since Moodle 2.9
- */
-function local_metadata_view($user, $context, $course = null) {
-
-    $eventdata = array(
-        'objectid' => $user->id,
-        'relateduserid' => $user->id,
-        'context' => $context
-    );
-
-    if (!empty($course)) {
-        $eventdata['courseid'] = $course->id;
-        $eventdata['other'] = array(
-            'courseid' => $course->id,
-            'courseshortname' => $course->shortname,
-            'coursefullname' => $course->fullname
-        );
-    }
-
-    $event = \core\event\user_local_metadata_viewed::create($eventdata);
-    $event->add_record_snapshot('user', $user);
-    $event->trigger();
 }
 
 /**
@@ -327,18 +282,18 @@ function local_metadata_view($user, $context, $course = null) {
  * So this is actually checking if we should redirect the user to edit their
  * profile, rather than whether there is a value in the database.
  *
- * @param int $userid
+ * @param int $instanceid
  * @return bool
  */
-function local_metadata_has_required_custom_fields_set($userid) {
+function local_metadata_has_required_custom_fields_set($instanceid, $contextlevel) {
     global $DB;
 
     $sql = "SELECT f.id
               FROM {local_metadata_field} f
-         LEFT JOIN {local_metadata} d ON (d.fieldid = f.id AND d.userid = ?)
-             WHERE f.required = 1 AND f.visible > 0 AND f.locked = 0 AND d.id IS NULL";
+         LEFT JOIN {local_metadata} d ON (d.fieldid = f.id AND d.instanceid = ?)
+             WHERE f.contextlevel = ? AND f.required = 1 AND f.visible > 0 AND f.locked = 0 AND d.id IS NULL";
 
-    if ($DB->record_exists_sql($sql, [$userid])) {
+    if ($DB->record_exists_sql($sql, [$instanceid, $contextlevel])) {
         return false;
     }
 

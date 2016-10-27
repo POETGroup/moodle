@@ -44,11 +44,11 @@ class fieldtype extends \local_metadata\fieldtype\fieldtype_base {
      * Pulls out the options for the menu from the database and sets the the corresponding key for the data if it exists.
      *
      * @param int $fieldid
-     * @param int $userid
+     * @param int $instanceid
      */
-    public function __construct($fieldid = 0, $userid = 0) {
+    public function __construct($fieldid = 0, $instanceid = 0) {
         // First call parent constructor.
-        parent::__construct($fieldid, $userid);
+        parent::__construct($fieldid, $instanceid);
 
         // Param 1 for menu type is the options.
         if (isset($this->field->param1)) {
@@ -82,9 +82,9 @@ class fieldtype extends \local_metadata\fieldtype\fieldtype_base {
      *
      * @deprecated since Moodle 3.1
      */
-    public function local_metadata_field_menu($fieldid=0, $userid=0) {
+    public function local_metadata_field_menu($fieldid=0, $instanceid=0) {
         debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
-        self::__construct($fieldid, $userid);
+        self::__construct($fieldid, $instanceid);
     }
 
     /**
@@ -126,15 +126,15 @@ class fieldtype extends \local_metadata\fieldtype\fieldtype_base {
     }
 
     /**
-     * When passing the user object to the form class for the edit profile page
+     * When passing the instance object to the form class for the edit page
      * we should load the key for the saved data
      *
      * Overwrites the base class method.
      *
-     * @param stdClass $user User object.
+     * @param stdClass $instance Instance object.
      */
-    public function edit_load_user_data($user) {
-        $user->{$this->inputname} = $this->datakey;
+    public function edit_load_instance_data($instance) {
+        $instance->{$this->inputname} = $this->datakey;
     }
 
     /**

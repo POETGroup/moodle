@@ -36,11 +36,11 @@ class fieldtype extends \local_metadata\fieldtype\fieldtype_base {
      * Constructor method.
      *
      * @param int $fieldid
-     * @param int $userid
+     * @param int $instanceid
      */
-    public function __construct($fieldid=0, $userid=0) {
+    public function __construct($fieldid=0, $instanceid=0) {
         // First call parent constructor.
-        parent::__construct($fieldid, $userid);
+        parent::__construct($fieldid, $instanceid);
 
         // Set the name for display; will need to be a language string.
         $this->name = 'Text area';
@@ -79,13 +79,13 @@ class fieldtype extends \local_metadata\fieldtype\fieldtype_base {
     }
 
     /**
-     * Load user data for this profile field, ready for editing.
-     * @param stdClass $user
+     * Load instance data for this metadata field, ready for editing.
+     * @param stdClass $instance
      */
-    public function edit_load_user_data($user) {
+    public function edit_load_instance_data($instance) {
         if ($this->data !== null) {
             $this->data = clean_text($this->data, $this->dataformat);
-            $user->{$this->inputname} = array('text' => $this->data, 'format' => $this->dataformat);
+            $instance->{$this->inputname} = array('text' => $this->data, 'format' => $this->dataformat);
         }
     }
 

@@ -23,5 +23,7 @@
 $string['pluginname'] = 'Metadata';
 
 $string['coursemetadata'] = 'Course metadata';
+$string['coursemetadataenabled'] = 'Use metadata for courses';
 $string['metadata'] = 'Metadata';
 $string['usermetadata'] = 'User metadata';
+$string['usermetadataenabled'] = 'Use metadata for users';

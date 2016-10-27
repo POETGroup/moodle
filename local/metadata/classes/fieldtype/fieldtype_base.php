@@ -60,13 +60,11 @@ class fieldtype_base {
     /**
      * Constructor method.
      * @param int $fieldid id of the profile from the local_metadata_field table
-     * @param int $userid id of the user for whom we are displaying data
+     * @param int $instanceid id of the instance for whom we are displaying data
      */
-    public function __construct($fieldid=0, $userid=0) {
-        global $USER;
-
+    public function __construct($fieldid=0, $instanceid=0) {
         $this->set_fieldid($fieldid);
-        $this->set_userid($userid);
+        $this->set_instanceid($instanceid);
         $this->load_data();
         if (!isset($this->name)) {
             $this->name = '-- unknown --';
@@ -78,9 +76,9 @@ class fieldtype_base {
      *
      * @deprecated since Moodle 3.1
      */
-    public function local_metadata_field_base($fieldid=0, $userid=0) {
+    public function local_metadata_field_base($fieldid=0, $instanceid=0) {
         debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
-        self::__construct($fieldid, $userid);
+        self::__construct($fieldid, $instanceid);
     }
 
     /**
@@ -108,8 +106,8 @@ class fieldtype_base {
      * @return bool
      */
     public function edit_field($mform) {
-        if ($this->field->visible != PROFILE_VISIBLE_NONE
-          or has_capability('moodle/user:update', context_system::instance())) {
+        if (($this->field->visible != PROFILE_VISIBLE_NONE) ||
+            (($this->field->contextlevel == CONTEXT_USER) && has_capability('moodle/user:update', \context_system::instance()))) {
 
             $this->edit_field_add($mform);
             $this->edit_field_set_default($mform);
@@ -125,8 +123,8 @@ class fieldtype_base {
      * @return bool
      */
     public function edit_after_data($mform) {
-        if ($this->field->visible != PROFILE_VISIBLE_NONE
-          or has_capability('moodle/user:update', context_system::instance())) {
+        if (($this->field->visible != PROFILE_VISIBLE_NONE) ||
+            (($this->field->contextlevel == CONTEXT_USER) && has_capability('moodle/user:update', \context_system::instance()))) {
             $this->edit_field_set_locked($mform);
             return true;
         }
@@ -135,26 +133,26 @@ class fieldtype_base {
 
     /**
      * Saves the data coming from form
-     * @param stdClass $usernew data coming from the form
+     * @param stdClass $new data coming from the form
      * @return mixed returns data id if success of db insert/update, false on fail, 0 if not permitted
      */
-    public function edit_save_data($usernew) {
+    public function edit_save_data($new) {
         global $DB;
 
-        if (!isset($usernew->{$this->inputname})) {
+        if (!isset($new->{$this->inputname})) {
             // Field not present in form, probably locked and invisible - skip it.
             return;
         }
 
-        $data = new stdClass();
+        $data = new \stdClass();
 
-        $usernew->{$this->inputname} = $this->edit_save_data_preprocess($usernew->{$this->inputname}, $data);
+        $new->{$this->inputname} = $this->edit_save_data_preprocess($new->{$this->inputname}, $data);
 
-        $data->userid  = $usernew->id;
+        $data->instanceid  = $new->id;
         $data->fieldid = $this->field->id;
-        $data->data    = $usernew->{$this->inputname};
+        $data->data    = $new->{$this->inputname};
 
-        if ($dataid = $DB->get_field('local_metadata', 'id', array('userid' => $data->userid, 'fieldid' => $data->fieldid))) {
+        if ($dataid = $DB->get_field('local_metadata', 'id', ['instanceid' => $data->instanceid, 'fieldid' => $data->fieldid])) {
             $data->id = $dataid;
             $DB->update_record('local_metadata', $data);
         } else {
@@ -165,19 +163,19 @@ class fieldtype_base {
     /**
      * Validate the form field from profile page
      *
-     * @param stdClass $usernew
+     * @param stdClass $new
      * @return  string  contains error message otherwise null
      */
-    public function edit_validate_field($usernew) {
+    public function edit_validate_field($new) {
         global $DB;
 
         $errors = array();
         // Get input value.
-        if (isset($usernew->{$this->inputname})) {
-            if (is_array($usernew->{$this->inputname}) && isset($usernew->{$this->inputname}['text'])) {
-                $value = $usernew->{$this->inputname}['text'];
+        if (isset($new->{$this->inputname})) {
+            if (is_array($new->{$this->inputname}) && isset($new->{$this->inputname}['text'])) {
+                $value = $new->{$this->inputname}['text'];
             } else {
-                $value = $usernew->{$this->inputname};
+                $value = $new->{$this->inputname};
             }
         } else {
             $value = '';
@@ -186,7 +184,7 @@ class fieldtype_base {
         // Check for uniqueness of data if required.
         if ($this->is_unique() && (($value !== '') || $this->is_required())) {
             $data = $DB->get_records_sql('
-                    SELECT id, userid
+                    SELECT id, instanceid
                       FROM {local_metadata}
                      WHERE fieldid = ?
                        AND ' . $DB->sql_compare_text('data', 255) . ' = ' . $DB->sql_compare_text('?', 255),
@@ -194,7 +192,7 @@ class fieldtype_base {
             if ($data) {
                 $existing = false;
                 foreach ($data as $v) {
-                    if ($v->userid == $usernew->id) {
+                    if ($v->instanceid == $new->id) {
                         $existing = true;
                         break;
                     }
@@ -224,7 +222,10 @@ class fieldtype_base {
      */
     public function edit_field_set_required($mform) {
         global $USER;
-        if ($this->is_required() && ($this->userid == $USER->id || isguestuser())) {
+        // Handling for specific contexts. TODO - Abstract this.
+        if ($this->is_required() &&
+            (($this->field->contextlevel != CONTEXT_USER) ||
+            ($this->instanceid == $USER->id || isguestuser()))) {
             $mform->addRule($this->inputname, get_string('required'), 'required', null, 'client');
         }
     }
@@ -237,7 +238,8 @@ class fieldtype_base {
         if (!$mform->elementExists($this->inputname)) {
             return;
         }
-        if ($this->is_locked() and !has_capability('moodle/user:update', context_system::instance())) {
+        if ($this->is_locked() &&
+            (($this->field->contextlevel == CONTEXT_USER) && !has_capability('moodle/user:update', context_system::instance()))) {
             $mform->hardFreeze($this->inputname);
             $mform->setConstant($this->inputname, $this->data);
         }
@@ -254,33 +256,33 @@ class fieldtype_base {
     }
 
     /**
-     * Loads a user object with data for this field ready for the edit profile
+     * Loads a instance object with data for this field ready for the edit profile
      * form
-     * @param stdClass $user a user object
+     * @param stdClass $instance a context object
      */
-    public function edit_load_user_data($user) {
+    public function edit_load_instance_data($instance) {
         if ($this->data !== null) {
-            $user->{$this->inputname} = $this->data;
+            $instance->{$this->inputname} = $this->data;
         }
     }
 
     /**
-     * Check if the field data should be loaded into the user object
+     * Check if the field data should be loaded into the instance object
      * By default it is, but for field types where the data may be potentially
      * large, the child class should override this and return false
      * @return bool
      */
-    public function is_user_object_data() {
+    public function is_instance_object_data() {
         return true;
     }
 
     /**
-     * Accessor method: set the userid for this instance
+     * Accessor method: set the instanceid for this instance
      * @internal This method should not generally be overwritten by child classes.
-     * @param integer $userid id from the user table
+     * @param integer $instanceid id from the instance table
      */
-    public function set_userid($userid) {
-        $this->userid = $userid;
+    public function set_instanceid($instanceid) {
+        $this->instanceid = $instanceid;
     }
 
     /**
@@ -293,8 +295,8 @@ class fieldtype_base {
     }
 
     /**
-     * Accessor method: Load the field record and user data associated with the
-     * object's fieldid and userid
+     * Accessor method: Load the field record and instance data associated with the
+     * object's fieldid and instanceis
      * @internal This method should not generally be overwritten by child classes.
      */
     public function load_data() {
@@ -310,7 +312,7 @@ class fieldtype_base {
         }
 
         if (!empty($this->field)) {
-            $params = array('userid' => $this->userid, 'fieldid' => $this->fieldid);
+            $params = array('instanceid' => $this->instanceid, 'fieldid' => $this->fieldid);
             if ($data = $DB->get_record('local_metadata', $params, 'data, dataformat')) {
                 $this->data = $data->data;
                 $this->dataformat = $data->dataformat;
@@ -338,12 +340,12 @@ class fieldtype_base {
                 if ($this->userid == $USER->id) {
                     return true;
                 } else {
-                    return has_capability('moodle/user:viewalldetails',
-                            context_user::instance($this->userid));
+                    return (($this->field->contextlevel != CONTEXT_USER) ||
+                            has_capability('moodle/user:viewalldetails', \context_user::instance($this->userid)));
                 }
             default:
-                return has_capability('moodle/user:viewalldetails',
-                        context_user::instance($this->userid));
+                return (($this->field->contextlevel != CONTEXT_USER) ||
+                        has_capability('moodle/user:viewalldetails', \context_user::instance($this->userid)));
         }
     }
 

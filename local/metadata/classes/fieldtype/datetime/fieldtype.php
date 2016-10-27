@@ -36,11 +36,11 @@ class fieldtype extends \local_metadata\fieldtype\fieldtype_base {
      * Constructor method.
      *
      * @param int $fieldid
-     * @param int $userid
+     * @param int $instanceid
      */
-    public function __construct($fieldid=0, $userid=0) {
+    public function __construct($fieldid=0, $instanceid=0) {
         // First call parent constructor.
-        parent::__construct($fieldid, $userid);
+        parent::__construct($fieldid, $instanceid);
 
         // Set the name for display; will need to be a language string.
         $this->name = 'Date/Time';
