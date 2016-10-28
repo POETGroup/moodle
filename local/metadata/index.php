@@ -135,7 +135,7 @@ foreach ($categories as $category) {
 
     if ($fields = $DB->get_records('local_metadata_field', ['categoryid' => $category->id], 'sortorder ASC')) {
         foreach ($fields as $field) {
-            $table->data[] = [format_string($field->name), local_metadata_field_icons($field)];
+            $table->data[] = [format_string($field->name), local_metadata_field_icons($field, $contextlevel)];
         }
     }
 
@@ -224,7 +224,7 @@ function local_metadata_category_icons($category, $contextlevel) {
  * @param stdClass $field the field object
  * @return string the icon string
  */
-function local_metadata_field_icons($field) {
+function local_metadata_field_icons($field, $contextlevel) {
     global $CFG, $USER, $DB, $OUTPUT;
 
     $strdelete   = get_string('delete');
@@ -235,23 +235,24 @@ function local_metadata_field_icons($field) {
     $fieldcount = $DB->count_records('local_metadata_field', ['categoryid' => $field->categoryid]);
     $datacount  = $DB->count_records('local_metadata', ['fieldid' => $field->id]);
 
+    $argstr = 'id='.$field->id.'&amp;contextlevel='.$contextlevel;
     // Edit.
-    $editstr = '<a title="'.$stredit.'" href="index.php?id='.$field->id.'&amp;action=editfield"><img src="'.$OUTPUT->pix_url('t/edit') . '" alt="'.$stredit.'" class="iconsmall" /></a> ';
+    $editstr = '<a title="'.$stredit.'" href="index.php?'.$argstr.'&amp;action=editfield"><img src="'.$OUTPUT->pix_url('t/edit') . '" alt="'.$stredit.'" class="iconsmall" /></a> ';
 
     // Delete.
-    $editstr .= '<a title="'.$strdelete.'" href="index.php?id='.$field->id.'&amp;action=deletefield&amp;sesskey='.sesskey();
+    $editstr .= '<a title="'.$strdelete.'" href="index.php?'.$argstr.'&amp;action=deletefield&amp;sesskey='.sesskey();
     $editstr .= '"><img src="'.$OUTPUT->pix_url('t/delete') . '" alt="'.$strdelete.'" class="iconsmall" /></a> ';
 
     // Move up.
     if ($field->sortorder > 1) {
-        $editstr .= '<a title="'.$strmoveup.'" href="index.php?id='.$field->id.'&amp;action=movefield&amp;dir=up&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/up') . '" alt="'.$strmoveup.'" class="iconsmall" /></a> ';
+        $editstr .= '<a title="'.$strmoveup.'" href="index.php?'.$argstr.'&amp;action=movefield&amp;dir=up&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/up') . '" alt="'.$strmoveup.'" class="iconsmall" /></a> ';
     } else {
         $editstr .= '<img src="'.$OUTPUT->pix_url('spacer') . '" alt="" class="iconsmall" /> ';
     }
 
     // Move down.
     if ($field->sortorder < $fieldcount) {
-        $editstr .= '<a title="'.$strmovedown.'" href="index.php?id='.$field->id.'&amp;action=movefield&amp;dir=down&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/down') . '" alt="'.$strmovedown.'" class="iconsmall" /></a> ';
+        $editstr .= '<a title="'.$strmovedown.'" href="index.php?'.$argstr.'&amp;action=movefield&amp;dir=down&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/down') . '" alt="'.$strmovedown.'" class="iconsmall" /></a> ';
     } else {
         $editstr .= '<img src="'.$OUTPUT->pix_url('spacer') . '" alt="" class="iconsmall" /> ';
     }
