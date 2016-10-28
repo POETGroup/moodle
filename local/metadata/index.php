@@ -163,7 +163,7 @@ echo get_string('or', 'lesson');
 html_writer::end_tag('div');
 
 // Create a new category link.
-$options = ['action' => 'editcategory'];
+$options = ['action' => 'editcategory', 'contextlevel' => $contextlevel];
 echo $OUTPUT->single_button(new moodle_url('index.php', $options), get_string('profilecreatecategory', 'admin'));
 
 echo '</div>';
