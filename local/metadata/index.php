@@ -190,13 +190,15 @@ function local_metadata_category_icons($category, $contextlevel) {
     $categorycount = $DB->count_records('local_metadata_category', ['contextlevel' => $contextlevel]);
     $fieldcount    = $DB->count_records('local_metadata_field', ['categoryid' => $category->id]);
 
+    $argstr = 'id='.$category->id.'&amp;contextlevel='.$contextlevel;
+
     // Edit.
-    $editstr = '<a title="'.$stredit.'" href="index.php?id='.$category->id.'&amp;action=editcategory"><img src="'.$OUTPUT->pix_url('t/edit') . '" alt="'.$stredit.'" class="iconsmall" /></a> ';
+    $editstr = '<a title="'.$stredit.'" href="index.php?'.$argstr.'&amp;action=editcategory"><img src="'.$OUTPUT->pix_url('t/edit') . '" alt="'.$stredit.'" class="iconsmall" /></a> ';
 
     // Delete.
     // Can only delete the last category if there are no fields in it.
     if (($categorycount > 1) or ($fieldcount == 0)) {
-        $editstr .= '<a title="'.$strdelete.'" href="index.php?id='.$category->id.'&amp;action=deletecategory&amp;sesskey='.sesskey();
+        $editstr .= '<a title="'.$strdelete.'" href="index.php?'.$argstr.'&amp;action=deletecategory&amp;sesskey='.sesskey();
         $editstr .= '"><img src="'.$OUTPUT->pix_url('t/delete') . '" alt="'.$strdelete.'" class="iconsmall" /></a> ';
     } else {
         $editstr .= '<img src="'.$OUTPUT->pix_url('spacer') . '" alt="" class="iconsmall" /> ';
@@ -204,14 +206,14 @@ function local_metadata_category_icons($category, $contextlevel) {
 
     // Move up.
     if ($category->sortorder > 1) {
-        $editstr .= '<a title="'.$strmoveup.'" href="index.php?id='.$category->id.'&amp;action=movecategory&amp;dir=up&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/up') . '" alt="'.$strmoveup.'" class="iconsmall" /></a> ';
+        $editstr .= '<a title="'.$strmoveup.'" href="index.php?'.$argstr.'&amp;action=movecategory&amp;dir=up&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/up') . '" alt="'.$strmoveup.'" class="iconsmall" /></a> ';
     } else {
         $editstr .= '<img src="'.$OUTPUT->pix_url('spacer') . '" alt="" class="iconsmall" /> ';
     }
 
     // Move down.
     if ($category->sortorder < $categorycount) {
-        $editstr .= '<a title="'.$strmovedown.'" href="index.php?id='.$category->id.'&amp;action=movecategory&amp;dir=down&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/down') . '" alt="'.$strmovedown.'" class="iconsmall" /></a> ';
+        $editstr .= '<a title="'.$strmovedown.'" href="index.php?'.$argstr.'&amp;action=movecategory&amp;dir=down&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/down') . '" alt="'.$strmovedown.'" class="iconsmall" /></a> ';
     } else {
         $editstr .= '<img src="'.$OUTPUT->pix_url('spacer') . '" alt="" class="iconsmall" /> ';
     }
